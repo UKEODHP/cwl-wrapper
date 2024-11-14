@@ -380,6 +380,32 @@ class Blender:
             in_main_template = copy.deepcopy(steps[connection_node_node_stage_in])
 
         # stage in
+
+        # Case where stage in only used for aws credentials
+        if not self.inputs:
+            logger.info("Adding basic stage in step") 
+            self.__prepare_step_run(steps, start_node_name, in_main_template)
+            logger.info(f"start node name is {start_node_name}")
+            logger.info(steps[start_node_name])
+            the_command = copy.deepcopy(self.main_stage_in)  # self.main_stage_in.copy()
+            the_command_inputs = the_command["inputs"]
+            the_command_outputs = the_command["outputs"]
+            logger.info("The command")
+            logger.info(the_command)
+
+            if type(the_command_inputs) is list:
+                for i in the_command_inputs:
+                    self.__add_to_in(steps[start_node_name]["in"], i["id"])
+            elif type(the_command_inputs) is dict:
+                for i in the_command_inputs:
+                    self.__add_to_in(steps[start_node_name]["in"], i)
+
+            steps[start_node_name]["run"] = the_command
+
+            cursor = cursor + 1
+            start_node_name = "%s_%d" % (start_node_name, cursor)
+
+        # Case where stagein used to load data for workflow
         for it in self.inputs:
             # print(f'Nodo: {start_node_name}  ')
             self.__prepare_step_run(steps, start_node_name, in_main_template)
