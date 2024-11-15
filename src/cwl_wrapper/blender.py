@@ -383,16 +383,13 @@ class Blender:
 
         # Case where stage in only used for aws credentials
         if not self.inputs:
-            logger.info("Adding basic stage in step") 
+            logger.info("Adding stage-in step for credentials only") 
             self.__prepare_step_run(steps, start_node_name, in_main_template)
-            logger.info(f"start node name is {start_node_name}")
-            logger.info(steps[start_node_name])
             the_command = copy.deepcopy(self.main_stage_in)  # self.main_stage_in.copy()
             the_command_inputs = the_command["inputs"]
             the_command_outputs = the_command["outputs"]
-            logger.info("The command")
-            logger.info(the_command)
 
+            # Add default inputs
             if type(the_command_inputs) is list:
                 for i in the_command_inputs:
                     self.__add_to_in(steps[start_node_name]["in"], i["id"])
