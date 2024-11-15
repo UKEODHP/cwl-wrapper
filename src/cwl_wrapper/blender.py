@@ -399,67 +399,8 @@ class Blender:
 
             steps[start_node_name]["run"] = the_command
 
-            cursor = cursor + 1
-            start_node_name = "%s_%d" % (start_node_name, cursor)
-
-        # Case where stagein used to load data for workflow
-        for it in self.inputs:
-            # print(f'Nodo: {start_node_name}  ')
-            self.__prepare_step_run(steps, start_node_name, in_main_template)
-
-            self.__add_input_to_in(steps[start_node_name]["in"], it.id)
-
-            the_command = copy.deepcopy(self.main_stage_in)  # self.main_stage_in.copy()
-            the_command_inputs = the_command["inputs"]
-            the_command_outputs = the_command["outputs"]
-
-            if overwrite_input and len(the_command_inputs) > 0:
-                if type(the_command_inputs) is list:
-                    for i in the_command_inputs:
-                        self.__add_to_in(steps[start_node_name]["in"], i["id"])
-                elif type(the_command_inputs) is dict:
-                    for i in the_command_inputs:
-                        self.__add_to_in(steps[start_node_name]["in"], i)
-
-            # why am I using copy.deepcopy??
-            # https://ttl255.com/yaml-anchors-and-aliases-and-how-to-disable-them/
-            # logger.debug(it)
-
-            if it.is_array:
-                the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory[]"))
-            elif it.is_optional:
-                the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory?"))
-            else:
-                the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory"))
-
-            # the_val = (
-            #     copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory[]"))
-            #     if it.is_array
-            #     else copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory"))
-            # )
-
-            # scatter feature
-            if it.is_array:
-                the_val = self.rulez.get("/cwl/stage_in/Directory")
-
-            # logger.debug(the_val)
-
-            if type(the_command_inputs) is list:
-                the_val["id"] = copy.deepcopy(it.id)
-                the_command_inputs.append(the_val)
-            elif type(the_command_inputs) is dict:
-                the_command_inputs["input"] = copy.deepcopy(the_val)
-
-            steps[start_node_name]["run"] = the_command
-
-            # add outputs to command
-
-            if it.is_optional:
-                command_out = copy.deepcopy(
-                    self.rulez.get("/cwl/outputBindingResult/command/Directory?")
-                )
-            else:
-                command_out = copy.deepcopy(self.rulez.get("/cwl/outputBindingResult/command/Directory"))
+            # Add dummy outputs to ensure step order
+            command_out = copy.deepcopy(self.rulez.get("/cwl/outputBindingResult/command/Directory"))
 
             command_id = "%s_out" % it.id
             nodes_out[it.id] = "%s/%s_out" % (start_node_name, it.id)
@@ -472,29 +413,117 @@ class Blender:
             # add step output
             steps[start_node_name]["out"].append(command_id)
 
-            # check scattering
-            if it.is_array:
-                steps[start_node_name]["scatter"] = "input"
-                steps[start_node_name]["scatterMethod"] = self.rulez.get(
-                    "/onstage/stage_in/if_scatter/scatterMethod"
-                )
-
             cursor = cursor + 1
             start_node_name = "%s_%d" % (start_node_name, cursor)
 
-        # ON_STAGE!
-        on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
-        if on_stage_node == "":
-            on_stage_node = "on_stage"
+            # ON_STAGE!
+            on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
+            if on_stage_node == "":
+                on_stage_node = "on_stage"
 
-        self.__prepare_step_run(steps, on_stage_node)
+            self.__prepare_step_run(steps, on_stage_node)
 
-        steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
+            steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
 
-        if steps[on_stage_node]["run"] == "":
-            raise Exception('Workflow without "id"')
+            if steps[on_stage_node]["run"] == "":
+                raise Exception('Workflow without "id"')
 
-        self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
+            self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
+
+        else: 
+            # Case where stagein used to load data for workflow
+            for it in self.inputs:
+                # print(f'Nodo: {start_node_name}  ')
+                self.__prepare_step_run(steps, start_node_name, in_main_template)
+
+                self.__add_input_to_in(steps[start_node_name]["in"], it.id)
+
+                the_command = copy.deepcopy(self.main_stage_in)  # self.main_stage_in.copy()
+                the_command_inputs = the_command["inputs"]
+                the_command_outputs = the_command["outputs"]
+
+                if overwrite_input and len(the_command_inputs) > 0:
+                    if type(the_command_inputs) is list:
+                        for i in the_command_inputs:
+                            self.__add_to_in(steps[start_node_name]["in"], i["id"])
+                    elif type(the_command_inputs) is dict:
+                        for i in the_command_inputs:
+                            self.__add_to_in(steps[start_node_name]["in"], i)
+
+                # why am I using copy.deepcopy??
+                # https://ttl255.com/yaml-anchors-and-aliases-and-how-to-disable-them/
+                # logger.debug(it)
+
+                if it.is_array:
+                    the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory[]"))
+                elif it.is_optional:
+                    the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory?"))
+                else:
+                    the_val = copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory"))
+
+                # the_val = (
+                #     copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory[]"))
+                #     if it.is_array
+                #     else copy.deepcopy(self.rulez.get("/cwl/stage_in/Directory"))
+                # )
+
+                # scatter feature
+                if it.is_array:
+                    the_val = self.rulez.get("/cwl/stage_in/Directory")
+
+                # logger.debug(the_val)
+
+                if type(the_command_inputs) is list:
+                    the_val["id"] = copy.deepcopy(it.id)
+                    the_command_inputs.append(the_val)
+                elif type(the_command_inputs) is dict:
+                    the_command_inputs["input"] = copy.deepcopy(the_val)
+
+                steps[start_node_name]["run"] = the_command
+
+                # add outputs to command
+
+                if it.is_optional:
+                    command_out = copy.deepcopy(
+                        self.rulez.get("/cwl/outputBindingResult/command/Directory?")
+                    )
+                else:
+                    command_out = copy.deepcopy(self.rulez.get("/cwl/outputBindingResult/command/Directory"))
+
+                command_id = "%s_out" % it.id
+                nodes_out[it.id] = "%s/%s_out" % (start_node_name, it.id)
+                if type(the_command_outputs) is list:
+                    command_out["id"] = command_id
+                    the_command_outputs.append(command_out)
+                elif type(the_command_outputs) is dict:
+                    the_command_outputs[command_id] = command_out
+
+                # add step output
+                steps[start_node_name]["out"].append(command_id)
+
+                # check scattering
+                if it.is_array:
+                    steps[start_node_name]["scatter"] = "input"
+                    steps[start_node_name]["scatterMethod"] = self.rulez.get(
+                        "/onstage/stage_in/if_scatter/scatterMethod"
+                    )
+
+                cursor = cursor + 1
+                start_node_name = "%s_%d" % (start_node_name, cursor)
+
+            # ON_STAGE!
+            on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
+            if on_stage_node == "":
+                on_stage_node = "on_stage"
+
+            self.__prepare_step_run(steps, on_stage_node)
+
+            steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
+
+            if steps[on_stage_node]["run"] == "":
+                raise Exception('Workflow without "id"')
+
+            self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
 
         # stage out
         connection_node_node_stage_out = self.rulez.get("/onstage/stage_out/connection_node")
@@ -626,5 +655,8 @@ class Blender:
         self.start = copy.deepcopy(self.main_wf)
 
         self.start = self.__add_stage_in_graph_cwl()
+
+        print("Self start")
+        print(self.start)
 
         return self.start
