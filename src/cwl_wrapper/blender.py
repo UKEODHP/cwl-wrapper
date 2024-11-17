@@ -117,6 +117,10 @@ class Blender:
         if type(where) is not dict:
             raise Exception("on_stage -> in must be a dict")
 
+        # Add dummy input from added stagein to ensure the order of steps is preserved
+        if "dummy_input" in directories_out:
+            where["dummy_input"] = directories_out["dummy_input"]
+
         for it in inp:
             if type(it) is str:
                 if it in directories_out:
@@ -402,8 +406,8 @@ class Blender:
             # Add dummy outputs to ensure step order
             command_out = copy.deepcopy(self.rulez.get("/cwl/outputBindingResult/command/Directory"))
 
-            command_id = "%s_out" % it.id
-            nodes_out[it.id] = "%s/%s_out" % (start_node_name, it.id)
+            command_id = "%s_out" % "dummy_input"
+            nodes_out[it.id] = "%s/%s_out" % (start_node_name, "dummy_input")
             if type(the_command_outputs) is list:
                 command_out["id"] = command_id
                 the_command_outputs.append(command_out)
@@ -415,20 +419,6 @@ class Blender:
 
             cursor = cursor + 1
             start_node_name = "%s_%d" % (start_node_name, cursor)
-
-            # # ON_STAGE!
-            # on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
-            # if on_stage_node == "":
-            #     on_stage_node = "on_stage"
-
-            # self.__prepare_step_run(steps, on_stage_node)
-
-            # steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
-
-            # if steps[on_stage_node]["run"] == "":
-            #     raise Exception('Workflow without "id"')
-
-            # self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
 
         else: 
             # Case where stagein used to load data for workflow
@@ -511,19 +501,19 @@ class Blender:
                 cursor = cursor + 1
                 start_node_name = "%s_%d" % (start_node_name, cursor)
 
-            # ON_STAGE!
-            on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
-            if on_stage_node == "":
-                on_stage_node = "on_stage"
+        # ON_STAGE!
+        on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
+        if on_stage_node == "":
+            on_stage_node = "on_stage"
 
-            self.__prepare_step_run(steps, on_stage_node)
+        self.__prepare_step_run(steps, on_stage_node)
 
-            steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
+        steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
 
-            if steps[on_stage_node]["run"] == "":
-                raise Exception('Workflow without "id"')
+        if steps[on_stage_node]["run"] == "":
+            raise Exception('Workflow without "id"')
 
-            self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
+        self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
 
         # stage out
         connection_node_node_stage_out = self.rulez.get("/onstage/stage_out/connection_node")
