@@ -416,19 +416,19 @@ class Blender:
             cursor = cursor + 1
             start_node_name = "%s_%d" % (start_node_name, cursor)
 
-            # ON_STAGE!
-            on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
-            if on_stage_node == "":
-                on_stage_node = "on_stage"
+            # # ON_STAGE!
+            # on_stage_node = self.rulez.get("/onstage/on_stage/connection_node")
+            # if on_stage_node == "":
+            #     on_stage_node = "on_stage"
 
-            self.__prepare_step_run(steps, on_stage_node)
+            # self.__prepare_step_run(steps, on_stage_node)
 
-            steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
+            # steps[on_stage_node]["run"] = f"#{self.user_wf.get_id()}"
 
-            if steps[on_stage_node]["run"] == "":
-                raise Exception('Workflow without "id"')
+            # if steps[on_stage_node]["run"] == "":
+            #     raise Exception('Workflow without "id"')
 
-            self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
+            # self.__create_on_stage_inputs(steps[on_stage_node]["in"], nodes_out)
 
         else: 
             # Case where stagein used to load data for workflow
