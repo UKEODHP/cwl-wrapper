@@ -407,7 +407,7 @@ class Blender:
             command_out = copy.deepcopy(self.rulez.get("/cwl/outputBindingResult/command/Directory"))
 
             command_id = "%s_out" % "dummy_input"
-            nodes_out[it.id] = "%s/%s_out" % (start_node_name, "dummy_input")
+            nodes_out["dummy_input"] = "%s/%s_out" % (start_node_name, "dummy_input")
             if type(the_command_outputs) is list:
                 command_out["id"] = command_id
                 the_command_outputs.append(command_out)
