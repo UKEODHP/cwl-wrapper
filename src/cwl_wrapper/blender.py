@@ -646,7 +646,4 @@ class Blender:
 
         self.start = self.__add_stage_in_graph_cwl()
 
-        print("Self start")
-        print(self.start)
-
         return self.start
